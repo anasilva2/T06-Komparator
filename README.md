@@ -1,14 +1,10 @@
 # Projeto de Sistemas Distribuídos 2016-2017 #
 
-Grupo CXX
-*(preencher com identificador de grupo e depois apagar esta linha)*
+Grupo T06
 
-... ... ...
+Ana Silva 79304 anaisilva@ist.utl.pt
 
-... ... ...
-
-... ... ...
-*(preencher com nome, número e email de membro do grupo e depois apagar esta linha)*
+Leonor Clemente 78054 
 
 
 -------------------------------------------------------------------------------
