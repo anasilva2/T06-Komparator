@@ -10,16 +10,16 @@ import org.komparator.supplier.domain.Purchase;
 import org.komparator.supplier.domain.QuantityException;
 import org.komparator.supplier.domain.Supplier;
 
-// TODO
-//@WebService(
-//		endpointInterface = "org.komparator.supplier.ws.SupplierPortType", 
-//		wsdlLocation = "...", 
-//		name = "SupplierWebService", 
-//		portName = "...Port", 
-//		targetNamespace = "...", 
-//		serviceName = "...Service"
-//)
-public class SupplierPortImpl { // implements SupplierPortType {
+
+@WebService(
+		endpointInterface = "org.komparator.supplier.ws.SupplierPortType", 
+		wsdlLocation = "supplier.1_0.wsdl", 
+		name = "SupplierWebService", 
+		portName = "SupplierPort", 
+		targetNamespace = "http://ws.supplier.komparator.org/", 
+		serviceName = "SupplierService"
+)
+public class SupplierPortImpl implements SupplierPortType {
 
 	// end point manager
 	private SupplierEndpointManager endpointManager;
@@ -51,22 +51,47 @@ public class SupplierPortImpl { // implements SupplierPortType {
 	}
 
 	public List<ProductView> searchProducts(String descText) throws BadText_Exception {
-		// TODO
 		
+		List<ProductView> productsList = new ArrayList<ProductView>();
 		
+		if(descText == null)
+			throwBadText("Text Description cannot be null!");
+		if(descText.length() == 0)
+			throwBadText("Text Description cannot be empty or whitespace!");
 		
-		
-		return null;
+		for(ProductView product : listProducts()){
+			if(product.getDesc().equals(descText)){
+				productsList.add(product);
+			}		
+		}
+		return productsList;
 	}
 
 	public String buyProduct(String productId, int quantity)
 			throws BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception {
-		// TODO
 		
+		ProductView product = getProduct(productId);
 		
+		if(quantity <= 0)
+			throwBadQuantity("Quantity must be a positive number");
 		
+		if(product == null)
+			throwBadProductId("Product Not Found!");
 		
-		return null;
+		int qty = product.getQuantity();
+		if(qty < quantity){
+			throwInsufficientQuantity("Insufficient Quantity! The product selected has only " + qty + " items available.");
+		}
+		
+		Supplier supplier = Supplier.getInstance();
+		String id = null;
+		try {
+			id = supplier.buyProduct(productId, quantity);
+		} catch (QuantityException e) {
+			e.printStackTrace();
+		}
+
+		return id;
 	}
 
 	// Auxiliary operations --------------------------------------------------
