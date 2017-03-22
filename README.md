@@ -4,7 +4,7 @@ Grupo T06
 
 Ana Silva 79304 anaisilva@ist.utl.pt
 
-Leonor Clemente 78054 
+Leonor Clemente 78054 leonor.f.clemente@ist.utl.pt
 
 
 -------------------------------------------------------------------------------
