@@ -56,13 +56,13 @@ public class SupplierPortImpl implements SupplierPortType {
 		
 		if(descText == null)
 			throwBadText("Text Description cannot be null!");
+		descText = descText.trim();
 		if(descText.length() == 0)
 			throwBadText("Text Description cannot be empty or whitespace!");
 		
 		for(ProductView product : listProducts()){
-			if(product.getDesc().equals(descText)){
+			if(product.getDesc().contains(descText))
 				productsList.add(product);
-			}		
 		}
 		return productsList;
 	}
@@ -88,9 +88,8 @@ public class SupplierPortImpl implements SupplierPortType {
 		try {
 			id = supplier.buyProduct(productId, quantity);
 		} catch (QuantityException e) {
-			e.printStackTrace();
+			throwBadQuantity("Quantidade inválida");
 		}
-
 		return id;
 	}
 
