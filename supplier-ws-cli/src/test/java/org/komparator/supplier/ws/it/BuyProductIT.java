@@ -48,6 +48,15 @@ public class BuyProductIT extends BaseIT {
 			client.createProduct(product);
 		}
 		
+		{
+			ProductView product = new ProductView();
+			product.setId("V3");
+			product.setDesc("Badmintonball");
+			product.setPrice(30);
+			product.setQuantity(1);
+			client.createProduct(product);
+		}
+		
 	}
 
 	@AfterClass
@@ -143,11 +152,19 @@ public class BuyProductIT extends BaseIT {
 	}
 	
 	@Test
+	public void buyProductAndCheckIfExistsTest() throws BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception{
+		client.buyProduct("V3",1);
+		assertEquals(client.getProduct("V3").getQuantity(), 0);
+	}
+	
+	@Test
 	public void buyProductTwiceSucessTest() throws BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception{
 		client.buyProduct("X1",1);
 		String id = client.buyProduct("X1",1);
-		assertEquals(id,"3");
+		assertEquals(id,"4");
 		assertEquals(client.getProduct("X1").getQuantity(), 7);
 	}
+	
+	
 
 }
