@@ -11,17 +11,29 @@ public class SupplierApp {
 			System.err.println("Usage: java " + SupplierApp.class.getName() + " wsURL");
 			return;
 		}
-		String wsURL = args[0];
+		String uddiURL = null;
+		String wsName = null;
+		String wsURL = null;
 
 		// Create server implementation object
-		SupplierEndpointManager endpoint = new SupplierEndpointManager(wsURL);
+		SupplierEndpointManager endpoint = null;
+		if (args.length == 1) {
+			wsURL = args[0];
+			endpoint = new SupplierEndpointManager(wsURL);
+		} else if (args.length >= 3) {
+			uddiURL = args[0];
+			wsName = args[1];
+			wsURL = args[2];
+			endpoint = new SupplierEndpointManager(uddiURL, wsName, wsURL);
+			endpoint.setVerbose(true);
+		}
+
 		try {
 			endpoint.start();
 			endpoint.awaitConnections();
 		} finally {
 			endpoint.stop();
 		}
-
 	}
 
 }

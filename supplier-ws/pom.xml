@@ -19,9 +19,14 @@
 
         <mainclass>org.komparator.supplier.ws.SupplierApp</mainclass>
 
+        <uddi.url>http://localhost:9090</uddi.url>
+        
+        <ws.i>1</ws.i>
         <ws.host>localhost</ws.host>
-        <ws.port>8081</ws.port>
+        <ws.port>808${ws.i}</ws.port>
         <ws.url>http://${ws.host}:${ws.port}/supplier-ws/endpoint</ws.url>
+
+        <ws.name>T06_Supplier${ws.i}</ws.name>
     </properties>
 
     <dependencies>
@@ -82,6 +87,8 @@
                     <killAfter>-1</killAfter>
                     <mainClass>${mainclass}</mainClass>
                     <arguments>
+                        <argument>${uddi.url}</argument>
+                        <argument>${ws.name}</argument>
                         <argument>${ws.url}</argument>
                     </arguments>
                 </configuration>

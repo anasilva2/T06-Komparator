@@ -36,7 +36,7 @@ public class MediatorClientApp {
         // the actual tests are made using JUnit
 
         System.out.println("Invoke ping()...");
-        String result = client.ping("client");
+        String result = client.ping("T06_Supplier");
         System.out.println(result);
 
     }

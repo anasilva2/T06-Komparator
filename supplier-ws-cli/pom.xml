@@ -26,6 +26,14 @@
     </properties>
 
     <dependencies>
+
+        <!-- UDDI Naming -->
+        <dependency>
+            <groupId>pt.ulisboa.tecnico.sdis</groupId>
+            <artifactId>uddi-naming</artifactId>
+            <version>1.2</version>
+        </dependency>
+    
         <!-- JAX-WS -->
         <dependency>
             <groupId>com.sun.xml.ws</groupId>
