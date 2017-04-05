@@ -1,6 +1,7 @@
 package org.komparator.mediator.ws.it;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.komparator.mediator.ws.InvalidItemId_Exception;
 import org.komparator.mediator.ws.InvalidText_Exception;
+import org.komparator.mediator.ws.ItemIdView;
 import org.komparator.mediator.ws.ItemView;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadProduct_Exception;
@@ -127,7 +129,45 @@ public class GetItemsIT extends BaseIT {
     public void getItemNullTest() throws InvalidItemId_Exception {
 		mediatorClient.getItems(null); 
 	}
-
-
+	
+	@Test(expected = InvalidItemId_Exception.class)
+	public void getItemEmptyTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems("");
+	}
+	
+	@Test(expected = InvalidItemId_Exception.class)
+	public void getItemWhiteSpaceTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems(" ");
+	}
+	
+	@Test(expected = InvalidItemId_Exception.class)
+	public void getItemTabTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems("\t");
+	}
+	
+	@Test(expected = InvalidItemId_Exception.class)
+	public void getProductNewlineTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems("\n");
+	}
+	
+	//main tests
+	
+	@Test
+	public void getItemNotExistsTest() throws InvalidItemId_Exception {
+		// when item does not exist, null should be returned
+		List<ItemView> product = mediatorClient.getItems("Z4");
+		assertNull(product);
+	}
+	
+	@Test
+	public void getItemExistsTest() throws InvalidItemId_Exception {
+		List<ItemView> product = mediatorClient.getItems("X1");
+		assertNotNull(product);
+		
+	}
+	
+	
 }
+	
+
 
