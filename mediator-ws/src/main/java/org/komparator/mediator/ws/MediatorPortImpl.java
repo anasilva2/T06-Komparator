@@ -1,9 +1,16 @@
 package org.komparator.mediator.ws;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.jws.WebService;
 
+import org.komparator.supplier.ws.BadProductId_Exception;
+import org.komparator.supplier.ws.BadText_Exception;
+import org.komparator.supplier.ws.ProductView;
 import org.komparator.supplier.ws.cli.SupplierClient;
 import org.komparator.supplier.ws.cli.SupplierClientException;
 
@@ -35,8 +42,42 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
-		// TODO Auto-generated method stub
-		return null;
+		List<ItemView> itemsList = new ArrayList<ItemView>();
+		
+		if(productId == null)
+			throwInvalidItemId("Product identifier cannot be null!");
+		productId = productId.trim();
+		if(productId.length() == 0)
+			throwInvalidItemId("Product identifier cannot be empty or whitespace!");
+		
+		try {
+			Collection<UDDIRecord> uddi = uddiLookup();
+			for(UDDIRecord u : uddi){
+				SupplierClient sClient = new SupplierClient(u.getUrl());
+				
+				if(sClient.getProduct(productId) != null){
+					ItemIdView itemIdView = new ItemIdView();
+					itemIdView.setProductId(productId);
+					itemIdView.setSupplierId(u.getOrgName());
+					
+					String desc = sClient.getProduct(productId).getDesc();
+					int price = sClient.getProduct(productId).getPrice();
+					
+					ItemView itemV = newItemView(itemIdView,desc,price);
+					itemsList.add(itemV);
+				}	
+			}
+		} catch (UDDINamingException e) {
+			e.getMessage();
+		} catch (SupplierClientException e) {
+			e.getMessage();
+		} catch (BadProductId_Exception e) {
+			throwInvalidItemId("Invalid Item Identifier");
+		}
+		
+		itemsList.sort(comparatorPrices);
+
+		return itemsList;
 	}
 
 	@Override
@@ -47,8 +88,42 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public List<ItemView> searchItems(String descText) throws InvalidText_Exception {
-		// TODO Auto-generated method stub
-		return null;
+		List<ItemView> itemsList = new ArrayList<ItemView>();
+		
+		if(descText == null)
+			throwInvalidText("Text Description cannot be null!");
+		descText = descText.trim();
+		if(descText.length() == 0)
+			throwInvalidText("Text Description cannot be null!");
+		
+		try {
+			Collection<UDDIRecord> items = uddiLookup();
+			for(UDDIRecord u : items){
+				SupplierClient supplier = new SupplierClient(u.getUrl());
+				List<ProductView> productsList = supplier.searchProducts(descText);
+				if(!productsList.isEmpty()){
+					for(ProductView p : productsList){
+						ItemIdView itemIdView = new ItemIdView();
+						itemIdView.setProductId(p.getId());
+						itemIdView.setSupplierId(u.getOrgName());
+						
+						String desc = descText;
+						int price = p.getPrice();
+						
+						ItemView item = newItemView(itemIdView,desc,price);
+						itemsList.add(item);
+					}
+				}
+			}
+		} catch (UDDINamingException e) {
+			e.getMessage();
+		} catch (SupplierClientException e) {
+			e.getMessage();
+		} catch (BadText_Exception e) {
+			e.getMessage();
+		}
+		itemsList.sort(comparatorID);
+		return itemsList;
 	}
 
 	@Override
@@ -67,19 +142,18 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public String ping(String arg0) {
-		UDDINaming uddi = endpointManager.getUddiNaming();
+		
 		StringBuilder str = new StringBuilder();
 		try {
-			for(UDDIRecord u : uddi.listRecords(arg0+"%")){
+			Collection<UDDIRecord> uddi = uddiLookup();
+			for(UDDIRecord u : uddi){
 				SupplierClient sClient = new SupplierClient(u.getUrl());
 				str.append(sClient.ping(u.getOrgName())+ "\n");
 			}
 		} catch (UDDINamingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.getMessage();
 		} catch (SupplierClientException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.getMessage();
 		}
 		return str.toString();
 	}
@@ -90,23 +164,58 @@ public class MediatorPortImpl implements MediatorPortType{
 		return null;
 	}
 
-	// Main operations -------------------------------------------------------
-
-    // TODO
-	
-    
+	   
 	// Auxiliary operations --------------------------------------------------	
 	
-    // TODO
+	private Comparator<ItemView> comparatorPrices = new Comparator<ItemView>(){
 
+		@Override
+		public int compare(ItemView i1, ItemView i2) {
+			return i1.getPrice() < i2.getPrice() ? -1 :
+				(i1.getPrice() > i2.getPrice()) ? 1 : 0;
+		}
+		
+	};
+	
+	private Comparator<ItemView> comparatorID = new Comparator<ItemView>(){
+
+		@Override
+		public int compare(ItemView i1, ItemView i2) {
+			return i1.getItemId().getProductId().compareTo(i2.getItemId().getProductId());
+		}
+		
+	};
+	
+	private Collection<UDDIRecord> uddiLookup() throws UDDINamingException{
+		UDDINaming uddi = endpointManager.getUddiNaming();
+		return uddi.listRecords("T06_Supplier%");	
+	}
 	
 	// View helpers -----------------------------------------------------
 	
-    // TODO
+    private ItemView newItemView(ItemIdView itemId, String desc, int price){
+    	ItemView itemView = new ItemView();
+    	itemView.setItemId(itemId);
+    	itemView.setDesc(desc);
+    	itemView.setPrice(price);
+    	return itemView;
+    }
 
     
 	// Exception helpers -----------------------------------------------------
 
-    // TODO
+    /** Helper method to throw new InvalidItemId exception */
+	private void throwInvalidItemId(final String message) throws InvalidItemId_Exception {
+		InvalidItemId faultInfo = new InvalidItemId();
+		faultInfo.message = message;
+		throw new InvalidItemId_Exception(message, faultInfo);
+	}
+	
+	/** Helper method to throw new InvalidItemId exception */
+	private void throwInvalidText(final String message) throws InvalidText_Exception {
+		InvalidText faultInfo = new InvalidText();
+		faultInfo.message = message;
+		throw new InvalidText_Exception(message, faultInfo);
+	}
 
 }
