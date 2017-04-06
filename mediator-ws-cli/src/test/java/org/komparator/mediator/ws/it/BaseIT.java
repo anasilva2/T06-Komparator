@@ -14,6 +14,14 @@ public class BaseIT {
 
 	protected static MediatorClient mediatorClient;
 
+	protected static String supplier1URL;
+	protected static String supplier1NAME;
+	protected static String supplier2URL;
+	protected static String supplier2NAME;
+	protected static String supplier3URL;
+	protected static String supplier3NAME;
+
+
 	@BeforeClass
 	public static void oneTimeSetup() throws Exception {
 		testProps = new Properties();
@@ -31,6 +39,14 @@ public class BaseIT {
 		String uddiURL = testProps.getProperty("uddi.url");
 		String wsName = testProps.getProperty("ws.name");
 		String wsURL = testProps.getProperty("ws.url");
+		supplier1URL = testProps.getProperty("supplier1.url");
+		supplier1NAME = testProps.getProperty("supplier1.name");
+		supplier2URL = testProps.getProperty("supplier2.url");
+		supplier2NAME = testProps.getProperty("supplier2.name");
+		supplier3URL = testProps.getProperty("supplier3.url");
+		supplier3NAME = testProps.getProperty("supplier3.name");
+
+
 
 		if ("true".equalsIgnoreCase(uddiEnabled)) {
 			mediatorClient = new MediatorClient(uddiURL, wsName);
