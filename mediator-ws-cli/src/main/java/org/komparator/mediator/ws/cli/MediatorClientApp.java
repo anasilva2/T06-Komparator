@@ -39,10 +39,5 @@ public class MediatorClientApp {
         String result = client.ping("T06_Supplier");
         System.out.println(result);
 
-
-        //APAGAR
-        System.out.println("Invoke getItems()...");
-        client.getItems("X1");
-
     }
 }

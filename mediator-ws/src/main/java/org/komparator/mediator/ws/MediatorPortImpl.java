@@ -1,6 +1,7 @@
 package org.komparator.mediator.ws;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,9 @@ public class MediatorPortImpl implements MediatorPortType{
 	private ConcurrentHashMap<String,CartView> cartList = 
 			new ConcurrentHashMap<String,CartView>();
 	
+	private List<ShoppingResultView> shoppingHistory = new ArrayList<ShoppingResultView>();
+	
+	private int shoppingId = 1;
 
 	// end point manager
 	private MediatorEndpointManager endpointManager;
@@ -55,6 +59,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		
 		cartList.clear();
+		shoppingHistory.clear();
+		shoppingId = 1;
 	}
 
 	@Override
@@ -142,6 +148,10 @@ public class MediatorPortImpl implements MediatorPortType{
 	public ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
 		
+		ShoppingResultView shopping = new ShoppingResultView();
+		boolean creditCardValidation = false;
+		int totalPrice = 0;
+		
 		if(cartId == null)
 			throwInvalidCartId("Cart Identifier cannot be null!");
 		cartId = cartId.trim();
@@ -153,10 +163,14 @@ public class MediatorPortImpl implements MediatorPortType{
 		creditCardNr = creditCardNr.trim();
 		if(creditCardNr.length() == 0)
 			throwInvalidCreditCard("Credit Card cannot be empty or whitespace!");
+		
 		if(cartList.get(cartId).getItems().isEmpty())
 			throwEmptyCart("The cart selected is empty!");
 		
-		boolean creditCardValidation = false;
+		if(!cartList.containsKey(cartId))
+			throwInvalidCartId("Invalid Cart Identifier!");
+		
+		
 		try {
 			CreditCardClient c = new CreditCardClient(ccURL);
 			creditCardValidation = c.validateNumber(creditCardNr);
@@ -168,6 +182,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			CartView cart = cartList.get(cartId);
 			List<SupplierClient> supplierList = getSuppliers();
 			for(CartItemView i : cart.getItems()){
+				boolean supplierFound = false;
 				for(SupplierClient supplier : supplierList){
 					if(i.getItem().getItemId().getSupplierId().equals(supplier.getWsName())){
 						
@@ -176,16 +191,32 @@ public class MediatorPortImpl implements MediatorPortType{
 						
 						try {
 							supplier.buyProduct(itemId, quantity);
+							totalPrice += supplier.getProduct(itemId).getPrice() * quantity;
+							shopping.getPurchasedItems().add(i);
+							supplierFound = true;
 						} catch (BadProductId_Exception | BadQuantity_Exception | InsufficientQuantity_Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							shopping.getDroppedItems().add(i);
 						}
 					}
 				}
+				if(!supplierFound)
+					shopping.getDroppedItems().add(i);
 			}
 		}
 		
-		return null;
+		shopping.setId(shoppingId+"");
+		shopping.setTotalPrice(totalPrice);
+		
+		if(shopping.getDroppedItems().size() == 0)
+			shopping.setResult(Result.COMPLETE);
+		else if(shopping.getPurchasedItems().size() == 0)
+			shopping.setResult(Result.EMPTY);
+		else
+			shopping.setResult(Result.PARTIAL);	
+		
+		shoppingHistory.add(shopping);
+		shoppingId++;
+		return shopping;
 	}
 
 	@Override
@@ -228,18 +259,24 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		
 		
+		
 		if(cartList.containsKey(cartId)){
 			
-			List<CartItemView> cart = cartList.get(cartId).getItems();
+			boolean productFound = false;
+			List<CartItemView> cartL = cartList.get(cartId).getItems();
 			
-			for(CartItemView c : cart){
+			for(CartItemView c : cartL){
 				String prodId = c.getItem().getItemId().getProductId();
 				String prodSupplier = c.getItem().getItemId().getSupplierId();
 				if(prodId.equals(itemId.getProductId()) && prodSupplier.equals(itemId.getSupplierId())){
 					int quantity = c.getQuantity() + itemQty;
 					c.setQuantity(quantity);
+					productFound = true;
 				}
 			}
+			
+			if(!productFound)
+				cartList.get(cartId).getItems().add(cartItem);
 			
 		}else{
 			
@@ -268,8 +305,10 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public List<ShoppingResultView> shopHistory() {
-		// TODO Auto-generated method stub
-		return null;
+		List<ShoppingResultView> shopHistory = shoppingHistory;
+		if(shoppingHistory.size() > 1)
+			Collections.reverse(shopHistory);
+		return shopHistory;
 	}
 
 	   
