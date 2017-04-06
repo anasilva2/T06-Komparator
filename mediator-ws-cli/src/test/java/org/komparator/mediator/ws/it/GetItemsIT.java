@@ -151,7 +151,11 @@ public class GetItemsIT extends BaseIT {
 	@Test
 	public void getItemAnotherExistsTest2() throws InvalidItemId_Exception {
 		List<ItemView> productList = mediatorClient.getItems("X1");
-		for(ItemView i : productList){
+		for(ItemView it : productList){
+			String item = it.getDesc();
+				if (item.equals(it)){
+					assertEquals(item, "X1");
+				}
 			
 		}	
 	}
