@@ -38,6 +38,10 @@ public class SupplierClient implements SupplierPortType {
 
     /** WS name */
     private String wsName = null;
+    
+    public String getWsName() {
+		return wsName;
+	}
 
 	/** WS end point address */
 	private String wsURL = null; // default value is defined inside WSDL
