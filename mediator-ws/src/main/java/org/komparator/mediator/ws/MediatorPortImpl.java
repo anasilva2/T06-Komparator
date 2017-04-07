@@ -101,6 +101,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	@Override
 	public List<CartView> listCarts() {
 		List<CartView> list = new ArrayList<CartView>();
+		Collections.synchronizedMap(cartList);
 		for(String key : cartList.keySet()){
 			list.add(cartList.get(key));
 		}
@@ -164,6 +165,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		if(creditCardNr.length() == 0)
 			throwInvalidCreditCard("Credit Card cannot be empty or whitespace!");
 		
+		Collections.synchronizedMap(cartList);
 		if(cartList.get(cartId).getItems().isEmpty())
 			throwEmptyCart("The cart selected is empty!");
 		
@@ -259,7 +261,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		
 		
-		
+		Collections.synchronizedMap(cartList);
 		if(cartList.containsKey(cartId)){
 			
 			boolean productFound = false;
@@ -305,6 +307,7 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public List<ShoppingResultView> shopHistory() {
+		Collections.synchronizedList(shoppingHistory);
 		List<ShoppingResultView> shopHistory = shoppingHistory;
 		if(shoppingHistory.size() > 1)
 			Collections.reverse(shopHistory);
