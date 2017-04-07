@@ -197,6 +197,7 @@ public class MediatorPortImpl implements MediatorPortType{
 							shopping.getPurchasedItems().add(i);
 							supplierFound = true;
 						} catch (BadProductId_Exception | BadQuantity_Exception | InsufficientQuantity_Exception e) {
+							supplierFound = true;
 							shopping.getDroppedItems().add(i);
 						}
 					}
@@ -204,6 +205,8 @@ public class MediatorPortImpl implements MediatorPortType{
 				if(!supplierFound)
 					shopping.getDroppedItems().add(i);
 			}
+		}else{
+			throwInvalidCreditCard("Invalid Credit Card");
 		}
 		
 		shopping.setId(shoppingId+"");
