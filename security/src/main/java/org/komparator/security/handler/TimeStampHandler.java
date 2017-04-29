@@ -117,13 +117,13 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 			
 			int i = 5000;
 			
-			try {
+			/*try {
 				System.out.println("Going to sleep for " + i/1000 + " seconds");
 				Thread.sleep(i);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
 
 		} catch (Exception e) {
 			System.out.print("Caught exception in handleMessage: ");
