@@ -31,9 +31,7 @@ public class SearchItemsIT extends BaseIT {
 
 	// static members
 	
-	private static SupplierClient s1 = null;
-	private static SupplierClient s2 = null;
-	private static SupplierClient s3 = null;
+	
 	
 	// one-time initialization and clean-up
 	@BeforeClass
@@ -44,9 +42,7 @@ public class SearchItemsIT extends BaseIT {
 		// fill-in test products
 		// (since getProduct is read-only the initialization below
 		// can be done once for all tests in this suite)
-		s1 = new SupplierClient(supplier1URL,supplier1NAME);
-		s2 = new SupplierClient(supplier2URL,supplier2NAME);
-		s3 = new SupplierClient(supplier2URL,supplier3NAME);
+		
 		
 		{
 			ProductView product = new ProductView();
@@ -54,7 +50,7 @@ public class SearchItemsIT extends BaseIT {
 			product.setDesc("Basketball");
 			product.setPrice(5);
 			product.setQuantity(10);
-			s1.createProduct(product);
+			supplierClients[0].createProduct(product);
 		}	
 		{
 			ProductView product = new ProductView();
@@ -62,7 +58,7 @@ public class SearchItemsIT extends BaseIT {
 			product.setDesc("Basketball");
 			product.setPrice(7);
 			product.setQuantity(1);
-			s2.createProduct(product);
+			supplierClients[1].createProduct(product);
 		}
 		{
 			ProductView product = new ProductView();
@@ -70,7 +66,7 @@ public class SearchItemsIT extends BaseIT {
 			product.setDesc("Basketball");
 			product.setPrice(20);
 			product.setQuantity(10);
-			s3.createProduct(product);
+			supplierClients[2].createProduct(product);
 		}
 		{
 			ProductView product = new ProductView();
@@ -78,7 +74,7 @@ public class SearchItemsIT extends BaseIT {
 			product.setDesc("Baseball");
 			product.setPrice(20);
 			product.setQuantity(20);
-			s1.createProduct(product);
+			supplierClients[0].createProduct(product);
 		}
 		{
 			ProductView product = new ProductView();
@@ -86,7 +82,7 @@ public class SearchItemsIT extends BaseIT {
 			product.setDesc("Soccer Ball");
 			product.setPrice(30);
 			product.setQuantity(30);
-			s2.createProduct(product);
+			supplierClients[1].createProduct(product);
 		}
 		 
 	}
@@ -183,7 +179,7 @@ public class SearchItemsIT extends BaseIT {
 	
 	@Test
 	public void searchItemWithZeroQtyTest() throws InvalidText_Exception, BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception{
-		s2.buyProduct("X1",1);
+		supplierClients[1].buyProduct("X1",1);
 		List<ItemView> productList = mediatorClient.searchItems("Basketball");
 		assertEquals(3, productList.size());
 		for(ItemView i: productList){

@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.komparator.mediator.ws.cli.MediatorClient;
+import org.komparator.supplier.ws.cli.SupplierClient;
 
 public class BaseIT {
 
@@ -20,6 +21,9 @@ public class BaseIT {
 	protected static String supplier2NAME;
 	protected static String supplier3URL;
 	protected static String supplier3NAME;
+	
+	private static final int NR_SUPPLIERS = 3;
+	protected static SupplierClient[] supplierClients = new SupplierClient[NR_SUPPLIERS];
 
 
 	@BeforeClass
@@ -53,11 +57,17 @@ public class BaseIT {
 		} else {
 			mediatorClient = new MediatorClient(wsURL);
 		}
+		
+		supplierClients[0] = new SupplierClient(supplier1URL,supplier1NAME);
+		supplierClients[1] = new SupplierClient(supplier2URL,supplier2NAME);
+		supplierClients[2] = new SupplierClient(supplier3URL,supplier3NAME);
 
 	}
 
 	@AfterClass
 	public static void cleanup() {
+		for(int i = 0; i < NR_SUPPLIERS; i++)
+			supplierClients[i] = null;
 	}
 
 }

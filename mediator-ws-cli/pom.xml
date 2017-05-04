@@ -27,6 +27,13 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.komparator.T06</groupId>
+            <artifactId>security</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        
         <!-- JAX-WS -->
         <dependency>
             <groupId>com.sun.xml.ws</groupId>

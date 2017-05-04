@@ -37,9 +37,6 @@ public class BuyCartIT extends BaseIT {
 	// static members
 	private static String ccNumber1 = "4024007102923926";
 	
-	private static SupplierClient s1 = null;
-	private static SupplierClient s2 = null;
-	private static SupplierClient s3 = null;
 	
 	private static ItemIdView itemId = null;
 	private static ItemIdView itemId2 = null;
@@ -48,17 +45,13 @@ public class BuyCartIT extends BaseIT {
 	
 	// one-time initialization and clean-up
 	@BeforeClass
-	public static void oneTimeSetUp() throws SupplierClientException  {
+	public static void oneTimeSetUp() {
 		// clear remote service state before all tests
-		mediatorClient.clear();
+		
 
 		// fill-in test products
 		// (since getProduct is read-only the initialization below
 		// can be done once for all tests in this suite)
-		
-		s1 = new SupplierClient(supplier1URL,supplier1NAME);
-		s2 = new SupplierClient(supplier2URL,supplier2NAME);
-		s3 = new SupplierClient(supplier2URL,supplier3NAME);
 					
 		
 	}
@@ -66,7 +59,7 @@ public class BuyCartIT extends BaseIT {
 	@AfterClass
 	public static void oneTimeTearDown() {
 		// clear remote service state after all tests
-		mediatorClient.clear();
+		
 	}
 
 	// members
@@ -80,7 +73,7 @@ public class BuyCartIT extends BaseIT {
 			product.setDesc("Basketball");
 			product.setPrice(5);
 			product.setQuantity(10);
-			s1.createProduct(product);
+			supplierClients[0].createProduct(product);
 		}
 	
 		{
@@ -89,7 +82,7 @@ public class BuyCartIT extends BaseIT {
 			product.setDesc("Basketball");
 			product.setPrice(20);
 			product.setQuantity(10);
-			s3.createProduct(product);
+			supplierClients[2].createProduct(product);
 		}
 		{
 			ProductView product = new ProductView();
@@ -97,7 +90,7 @@ public class BuyCartIT extends BaseIT {
 			product.setDesc("Baseball");
 			product.setPrice(20);
 			product.setQuantity(20);
-			s1.createProduct(product);
+			supplierClients[0].createProduct(product);
 		}
 		{
 			ProductView product = new ProductView();
@@ -105,7 +98,7 @@ public class BuyCartIT extends BaseIT {
 			product.setDesc("Soccer ball");
 			product.setPrice(30);
 			product.setQuantity(30);
-			s2.createProduct(product);
+			supplierClients[1].createProduct(product);
 		}
 		
 
@@ -136,6 +129,11 @@ public class BuyCartIT extends BaseIT {
 	@After
 	public void tearDown() {
 		mediatorClient.clear();
+		
+		supplierClients[0].clear();
+		supplierClients[1].clear();
+		supplierClients[2].clear();
+		
 	}
 
 	// tests
@@ -170,6 +168,11 @@ public class BuyCartIT extends BaseIT {
 	@Test(expected = InvalidCreditCard_Exception.class)
     public void buyCartInvalidCreditCardTest() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
 		mediatorClient.buyCart("Cart1","1234562");
+	}
+	
+	@Test(expected = InvalidCartId_Exception.class)
+    public void buyCartCartDoesNotExistTest() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
+		mediatorClient.buyCart("Cart10",ccNumber1);
 	}
 	
 	//main tests

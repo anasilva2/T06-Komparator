@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.jws.HandlerChain;
 import javax.jws.WebService;
 
 import org.komparator.supplier.ws.BadProductId_Exception;
@@ -30,6 +31,8 @@ import pt.ulisboa.tecnico.sdis.ws.uddi.UDDIRecord;
 		targetNamespace = "http://ws.mediator.komparator.org/", 
 		serviceName = "MediatorService"
 )
+
+@HandlerChain(file = "/mediator-ws_handler-chain.xml")
 public class MediatorPortImpl implements MediatorPortType{
 	
 	private String suppliers = "T06_Supplier%";
@@ -228,6 +231,8 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 			InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
+		int prodQty = 0;
+		
 		if(cartId == null)
 			throwInvalidCartId("Cart Identifier cannot be null!");
 		cartId = cartId.trim();
@@ -237,6 +242,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		if(itemId == null)
 			throwInvalidItemId("Item Id cannot be null");
 		
+		if(itemId.getSupplierId() == null || itemId.getSupplierId().equals(""))
+			throwInvalidItemId("Item Id Supplier cannot be null");
+		
 		if(itemQty <= 0)
 			throwInvalidQuantity("Item Quantity must be a positive number!");
 		
@@ -245,8 +253,12 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		for(SupplierClient s : supplierList){
 			if(s.getWsName().equals(itemId.getSupplierId())){
+				
 				try {
-					if(s.getProduct(itemId.getProductId()).getQuantity() < itemQty)
+					if(s.getProduct(itemId.getProductId()) == null)
+						throwInvalidItemId("Item Does Not Exist");
+					prodQty = s.getProduct(itemId.getProductId()).getQuantity();
+					if(prodQty < itemQty)
 						throwNotEnoughItems("Not Enough Items from " + s.getWsName() + " !");
 				} catch (BadProductId_Exception e) {
 					throwInvalidItemId("Invalid Item Identifer");
@@ -275,6 +287,8 @@ public class MediatorPortImpl implements MediatorPortType{
 				String prodSupplier = c.getItem().getItemId().getSupplierId();
 				if(prodId.equals(itemId.getProductId()) && prodSupplier.equals(itemId.getSupplierId())){
 					int quantity = c.getQuantity() + itemQty;
+					if(quantity > prodQty)
+						throwNotEnoughItems("Excesso de Quantidade");
 					c.setQuantity(quantity);
 					productFound = true;
 				}
