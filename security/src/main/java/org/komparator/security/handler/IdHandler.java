@@ -54,7 +54,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 			// add header
 			SOAPHeader sh = se.getHeader();
 			if(sh == null)
-				throw new RuntimeException("Header Doesn't Exist");
+				throw new RuntimeException("Header in IdHandler Doesn't Exist");
 			
 			Name name = se.createName("Identifier", "id", "http://org.komparator/security");
 			Iterator it = sh.getChildElements(name);
@@ -73,7 +73,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 			
 		} catch (SOAPException e) {
 			// TODO Auto-generated catch block
-			e.getMessage();
+			throw new RuntimeException("Erro no handler IdHandler");
 		}
 		
 	}
@@ -99,7 +99,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				SOAPHeader sh = se.getHeader();
 				
 				if (sh == null)
-					sh = se.addHeader();
+					throw new RuntimeException("Header in IdHandler cannot be null");
 				
 				Name name = se.createName("Identifier", "id", "http://org.komparator/security");
 				
@@ -110,7 +110,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				
 			} catch (SOAPException e) {
 				// TODO Auto-generated catch block
-				e.getMessage();
+				throw new RuntimeException("Erro no handler IdHandler");
 			}
 		}
 	}
@@ -143,9 +143,8 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 			return b;
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
-			e.getMessage();
+			throw new RuntimeException("Erro generation a secure random number");
 		}
-		return null;
 
 	}
 	

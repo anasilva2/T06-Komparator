@@ -1,5 +1,6 @@
 package org.komparator.supplier.ws;
 
+import org.komparator.security.handler.SignatureHandler;
 
 /** Main class that starts the Supplier Web Service. */
 public class SupplierApp {
@@ -23,6 +24,7 @@ public class SupplierApp {
 		} else if (args.length >= 3) {
 			uddiURL = args[0];
 			wsName = args[1];
+			SignatureHandler.idEmissor = wsName;
 			wsURL = args[2];
 			endpoint = new SupplierEndpointManager(uddiURL, wsName, wsURL);
 			endpoint.setVerbose(true);

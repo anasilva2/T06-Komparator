@@ -102,7 +102,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 			
 			NodeList children = body.getFirstChild().getChildNodes();
 			
-			printSOAPMessage(smc);
+			//printSOAPMessage(smc);
 			
 			for(int i = 0; i < children.getLength(); i++){
 				
@@ -126,9 +126,9 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 				}
 			}
 			
-		} catch (SOAPException | KeyStoreException | UnrecoverableKeyException | CryptoUtilException  e) {
+		} catch (Exception  e) {
 			// TODO Auto-generated catch block
-			e.getMessage();
+			throw new RuntimeException("Erro no handler CreditCard");
 		}
 		
 		
@@ -149,7 +149,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 			SOAPEnvelope se = sp.getEnvelope();
 			SOAPBody body = se.getBody();
 			
-			printSOAPMessage(smc);
+			//printSOAPMessage(smc);
 			
 			NodeList children = body.getFirstChild().getChildNodes();
 		
@@ -171,7 +171,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 				
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.getMessage();
+			throw new RuntimeException("Erro no handler CreditCard");
 		}
 		
 	}

@@ -55,12 +55,9 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 		else
 			try {
 				checkTime(smc);
-			} catch (ParseException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e.getMessage();
-			} catch (SOAPException e) {
-				// TODO Auto-generated catch block
-				e.getMessage();
+				throw new RuntimeException("Erro no checkTime do TimeStampHandler");
 			}
 			
 		return true;
@@ -105,7 +102,7 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 			// add header
 			SOAPHeader sh = se.getHeader();
 			if (sh == null)
-				sh = se.addHeader();
+				throw new RuntimeException("Header em TimeStampHandler cannot be null");
 			
 			// add header element (name, namespace prefix, namespace)
 			Name name = se.createName("TimeStamp", "ts", "http://org.komparator/security");
@@ -126,9 +123,7 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 			}*/
 
 		} catch (Exception e) {
-			System.out.print("Caught exception in handleMessage: ");
-			System.out.println(e);
-			System.out.println("Continue normal processing...");
+			throw new RuntimeException("Erro no handler TimeStampHandler");
 		}
 	}
 	
@@ -144,7 +139,7 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 		// add header
 		SOAPHeader sh = se.getHeader();
 		if (sh == null)
-			sh = se.addHeader();
+			throw new RuntimeException("Header cannot be null");
 			
 		Name name = se.createName("TimeStamp", "ts", "http://org.komparator/security");
 		Iterator it = sh.getChildElements(name);

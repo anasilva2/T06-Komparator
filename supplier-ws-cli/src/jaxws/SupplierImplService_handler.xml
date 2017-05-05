@@ -6,6 +6,12 @@
         <handler>
             <handler-class>org.komparator.security.handler.TimeStampHandler</handler-class>
         </handler>
+        <handler>
+            <handler-class>org.komparator.security.handler.IdHandler</handler-class>
+        </handler>
+        <handler>
+            <handler-class>org.komparator.security.handler.SignatureHandler</handler-class>
+        </handler>
          <handler>
             <handler-class>example.ws.handler.LoggingHandler</handler-class>
         </handler>

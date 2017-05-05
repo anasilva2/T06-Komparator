@@ -1,5 +1,7 @@
 package org.komparator.supplier.ws.cli;
 
+import org.komparator.security.handler.SignatureHandler;
+
 /** Main class that starts the Supplier Web Service client. */
 public class SupplierClientApp {
 
@@ -19,6 +21,7 @@ public class SupplierClientApp {
         } else if (args.length >= 2) {
             uddiURL = args[0];
             wsName = args[1];
+            SignatureHandler.idEmissor = wsName;
         }
 
 		// Create client

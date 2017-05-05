@@ -1,5 +1,7 @@
 package org.komparator.mediator.ws.cli;
 
+import org.komparator.security.handler.SignatureHandler;
+
 public class MediatorClientApp {
 
     public static void main(String[] args) throws Exception {
@@ -18,6 +20,7 @@ public class MediatorClientApp {
         } else if (args.length >= 2) {
             uddiURL = args[0];
             wsName = args[1];
+            SignatureHandler.idEmissor = wsName;
         }
 
         // Create client
