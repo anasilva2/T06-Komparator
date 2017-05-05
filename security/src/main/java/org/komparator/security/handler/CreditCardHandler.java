@@ -65,7 +65,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 	@Override
 	public boolean handleFault(SOAPMessageContext smc) {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override

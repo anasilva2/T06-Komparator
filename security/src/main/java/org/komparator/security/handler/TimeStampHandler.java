@@ -150,8 +150,7 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 		Iterator it = sh.getChildElements(name);
 			
 		if (!it.hasNext()) {
-			System.out.println("Header element not found.");
-			return true;
+			throw new RuntimeException("Cannot find TimeStamp at Header");
 		}
 			
 		SOAPElement element = (SOAPElement) it.next();
