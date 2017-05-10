@@ -48,7 +48,7 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
-		System.out.println("########## SignatureCheckHandler ###########");
+		
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		if(!outbound.booleanValue())
 			verifySignature(smc);
@@ -57,7 +57,7 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 
 	
 	private void verifySignature(SOAPMessageContext smc) {
-		
+		System.out.println("########## SignatureCheckHandler ###########");
 		CryptoUtil crypto = new CryptoUtil();
 		String signature = null;
 		String idEmissor = null;
@@ -74,6 +74,8 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 			if (sh == null)
 				throw new RuntimeException("Header cannot be null");
 			
+			System.out.println("Message received with Signature: ");
+			printSOAPMessage(smc);
 			
 			// extrair a assinatura e o emissor e depois remover do cabeçalho 
 			// da mensagem SOAP tanto a assinatura como o emissor
@@ -104,6 +106,9 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 			}
 			
 			sh.normalize();
+			
+			System.out.println("Message received without Signature: ");
+			printSOAPMessage(smc);
 			
 			//Caso a signature e o emissor não sejam nulos
 			//obtem o certificado do emissor e o certificado da CA
@@ -148,6 +153,7 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 				}
 			
 			}
+			System.out.println("Digital Signature concluded with success");
 			
 			
 		} catch (Exception e) {
@@ -167,6 +173,21 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 	public boolean handleFault(SOAPMessageContext context) {
 		// TODO Auto-generated method stub
 		return true;
+	}
+	
+	private void printSOAPMessage(SOAPMessageContext smc){
+		
+		try {
+			SOAPMessage msg = smc.getMessage();
+			ByteArrayOutputStream o = new ByteArrayOutputStream();
+			msg.writeTo(o);
+			String s = new String(o.toByteArray());
+			System.out.println(s);
+		} catch (SOAPException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 

@@ -88,7 +88,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 	}
 
 	private void decipherCreditCardNumber(SOAPMessageContext smc) {
-		System.out.println("-------SERVER-------");
+		System.out.println("-------SERVER/Decipher-------");
 		
 		CryptoUtil crypto = new CryptoUtil();
 
@@ -102,7 +102,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 			
 			NodeList children = body.getFirstChild().getChildNodes();
 			
-			//printSOAPMessage(smc);
+			printSOAPMessage(smc);
 			
 			for(int i = 0; i < children.getLength(); i++){
 				
@@ -135,7 +135,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 	}
 
 	private void cipherCreditCardNumber(SOAPMessageContext smc) {
-		System.out.println("-------CLIENTE-------");
+		System.out.println("-------CLIENTE/Cipher-------");
 		CryptoUtil crypto = new CryptoUtil();
 		
 		
@@ -149,7 +149,7 @@ public class CreditCardHandler implements SOAPHandler<SOAPMessageContext>{
 			SOAPEnvelope se = sp.getEnvelope();
 			SOAPBody body = se.getBody();
 			
-			//printSOAPMessage(smc);
+			printSOAPMessage(smc);
 			
 			NodeList children = body.getFirstChild().getChildNodes();
 		

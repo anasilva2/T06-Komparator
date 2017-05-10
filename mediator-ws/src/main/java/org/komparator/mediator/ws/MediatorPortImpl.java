@@ -169,11 +169,14 @@ public class MediatorPortImpl implements MediatorPortType{
 			throwInvalidCreditCard("Credit Card cannot be empty or whitespace!");
 		
 		Collections.synchronizedMap(cartList);
-		if(cartList.get(cartId).getItems().isEmpty())
-			throwEmptyCart("The cart selected is empty!");
 		
 		if(!cartList.containsKey(cartId))
 			throwInvalidCartId("Invalid Cart Identifier!");
+		
+		if(cartList.get(cartId).getItems().isEmpty())
+			throwEmptyCart("The cart selected is empty!");
+		
+		
 		
 		
 		try {

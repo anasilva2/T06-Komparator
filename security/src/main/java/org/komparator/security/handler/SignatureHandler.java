@@ -46,7 +46,7 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
-		System.out.println("######## Signature Handler #######");
+		
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		if(outbound.booleanValue())
 			createSignature(smc);
@@ -54,7 +54,7 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 	}
 	
 	private void createSignature(SOAPMessageContext smc) {
-		
+		System.out.println("######## Signature Handler #######");
 		CryptoUtil crypto = new CryptoUtil();
 		
 		
@@ -106,6 +106,8 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 			
 			nameEmissorElement.addTextNode(idEmissor);
 			
+			System.out.println("Message sent with Signature: ");
+			printSOAPMessage(smc);
 			
 		} catch (Exception e) {
 			
@@ -125,5 +127,20 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 		return true;
 	}
 		
+	private void printSOAPMessage(SOAPMessageContext smc){
+		
+		
+		try {
+			SOAPMessage msg = smc.getMessage();
+			ByteArrayOutputStream o = new ByteArrayOutputStream();
+			msg.writeTo(o);
+			String s = new String(o.toByteArray());
+			System.out.println(s);
+		} catch (SOAPException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 
 }
