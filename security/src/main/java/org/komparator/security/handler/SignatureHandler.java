@@ -3,6 +3,8 @@ package org.komparator.security.handler;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
@@ -44,7 +46,7 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
-		
+		System.out.println("######## Signature Handler #######");
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		if(outbound.booleanValue())
 			createSignature(smc);
@@ -60,9 +62,15 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 			
 			//Obter o private key do emissor atraves do path
 			String path = "/"+idEmissor+".jks";
-			privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(path, password.toCharArray(), idEmissor.toLowerCase(), password.toCharArray());
 			
-			// get SOAP envelope
+			//privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(path, password.toCharArray(), idEmissor.toLowerCase(), password.toCharArray());
+			
+			InputStream in = this.getClass().getResourceAsStream(path);
+			KeyStore keyStore = CertUtil.readKeystoreFromStream(in, password.toCharArray());
+			
+			PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStore(idEmissor.toLowerCase(), password.toCharArray(), keyStore);
+			
+			// get SOAP envelope 
 			SOAPMessage msg = smc.getMessage();
 			SOAPPart sp = msg.getSOAPPart();
 			SOAPEnvelope se = sp.getEnvelope();
@@ -98,6 +106,7 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 			
 			nameEmissorElement.addTextNode(idEmissor);
 			
+			
 		} catch (Exception e) {
 			
 			e.getMessage();
@@ -115,7 +124,6 @@ public class SignatureHandler implements SOAPHandler<SOAPMessageContext>{
 		// TODO Auto-generated method stub
 		return true;
 	}
-
-	
+		
 
 }

@@ -1,6 +1,7 @@
 package org.komparator.security.handler;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
@@ -14,12 +15,14 @@ import java.util.Set;
 import javax.xml.namespace.QName;
 import javax.xml.soap.Name;
 import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.SOAPHandler;
 import javax.xml.ws.handler.soap.SOAPMessageContext;
+import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
 
 import org.komparator.security.CertUtil;
 import org.komparator.security.CryptoUtil;
@@ -45,6 +48,7 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
+		System.out.println("########## SignatureCheckHandler ###########");
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		if(!outbound.booleanValue())
 			verifySignature(smc);
@@ -69,6 +73,7 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 			// se não tiver header manda excepcao
 			if (sh == null)
 				throw new RuntimeException("Header cannot be null");
+			
 			
 			// extrair a assinatura e o emissor e depois remover do cabeçalho 
 			// da mensagem SOAP tanto a assinatura como o emissor
@@ -115,12 +120,17 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 				
 				Certificate cert = certFactory.generateCertificate(in);
 				
-				Certificate trustedCert = CertUtil.getX509CertificateFromResource(certificateCA);
+				//Certificate trustedCert = CertUtil.getX509CertificateFromResource(certificateCA);
+				InputStream input = this.getClass().getResourceAsStream(certificateCA);
+				Certificate trustedCert = CertUtil.getX509CertificateFromStream(input);
+				
+				//InputStream in = this.getClass().getResourceAsStream(path);
 				
 				//Testa se o Certificado obtido do emissor é assinado pela CA
 				if(!CertUtil.verifySignedCertificate(cert, trustedCert)){
 					throw new RuntimeException("The certificate obtained is not signed by CA");
 				}
+				
 				//Obtem chave publica
 				PublicKey pubKey = cert.getPublicKey();
 				if(pubKey == null)
@@ -130,9 +140,11 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				msg.writeTo(bos);
 				
+				byte[] sig = parseBase64Binary(signature);
+								
 				//verifica se a assinatura digital é valida
-				if(!crypto.verifyDigitalSignature(bos.toByteArray(), pubKey, signature.getBytes())){
-					throw new RuntimeException("Digital Signature return ");
+				if(!crypto.verifyDigitalSignature(bos.toByteArray(), pubKey, sig)){
+					throw new RuntimeException("Digital Signature verification failed ");
 				}
 			
 			}
@@ -156,5 +168,6 @@ public class SignatureCheckHandler implements SOAPHandler<SOAPMessageContext> {
 		// TODO Auto-generated method stub
 		return true;
 	}
+	
 
 }
