@@ -1,14 +1,19 @@
 package org.komparator.mediator.ws;
 
+import java.security.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jws.HandlerChain;
+import javax.jws.Oneway;
 import javax.jws.WebService;
 
+import org.komparator.security.handler.TimeStampHandler;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
 import org.komparator.supplier.ws.BadText_Exception;
@@ -25,7 +30,7 @@ import pt.ulisboa.tecnico.sdis.ws.uddi.UDDIRecord;
 
 @WebService(
 		endpointInterface = "org.komparator.mediator.ws.MediatorPortType", 
-		wsdlLocation = "mediator.1_0.wsdl", 
+		wsdlLocation = "mediator.2_0.wsdl", 
 		name = "MediatorWebService", 
 		portName = "MediatorPort", 
 		targetNamespace = "http://ws.mediator.komparator.org/", 
@@ -227,6 +232,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		shoppingHistory.add(shopping);
 		shoppingId++;
+		
+		//Para update no secundário
+		updateShopHistory(shopping);
 		return shopping;
 	}
 
@@ -306,6 +314,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			cart.setCartId(cartId);
 			cart.getItems().add(cartItem);
 			cartList.put(cartId, cart);
+			updateCart(cartId, cart);
 			
 		}
 			
@@ -333,6 +342,20 @@ public class MediatorPortImpl implements MediatorPortType{
 			Collections.reverse(shopHistory);
 		return shopHistory;
 	}
+	
+	@Override
+	public void imAlive() {
+		String mediatorN = endpointManager.getWsI();
+		if(!mediatorN.equals("1")){
+			
+			Date d = new Date();
+			LastTimeAliveSingleton.getInstance().setLastTimeAlive(d);
+			SimpleDateFormat dateFormatter1 = new SimpleDateFormat("HH:mm:ss");
+
+			System.out.println("imAlive Invoked() at " + dateFormatter1.format(d));
+		}
+	}
+	
 
 	   
 	// Auxiliary operations --------------------------------------------------	
@@ -373,6 +396,22 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		
 		return supplierList;
+	}
+	
+	@Override
+	public void updateShopHistory(ShoppingResultView shoppingList) {
+		String mediatorN = endpointManager.getWsI();
+		if(!mediatorN.equals("1")){
+			shoppingHistory.add(shoppingList);
+		}
+	}
+
+	@Override
+	public void updateCart(String id, CartView cart) {
+		String mediatorN = endpointManager.getWsI();
+		if(!mediatorN.equals("1")){
+			cartList.put(id, cart);
+		}
 	}
 	
 	// View helpers -----------------------------------------------------
@@ -443,5 +482,6 @@ public class MediatorPortImpl implements MediatorPortType{
 		faultInfo.message = message;
 		throw new EmptyCart_Exception(message, faultInfo);
 	}
+
 
 }

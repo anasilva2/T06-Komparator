@@ -30,14 +30,32 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 		return null;
 	}
 
+	@Override
+	public boolean handleFault(SOAPMessageContext context) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
+	@Override
+	public void close(MessageContext context) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
+		
+		QName operation = (QName) smc.get(MessageContext.WSDL_OPERATION);
+		
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
-		if(outbound.booleanValue())
-			addId(smc);
-		else
-			checkId(smc);
+		
+		if(!operation.getLocalPart().equals("imAlive")){
+			if(outbound.booleanValue())
+				addId(smc);
+			else
+				checkId(smc);
+		}
+		
 		return true;
 	}
 
@@ -113,19 +131,6 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				throw new RuntimeException("Erro no handler IdHandler");
 			}
 		}
-	}
-
-
-	@Override
-	public boolean handleFault(SOAPMessageContext context) {
-		// TODO Auto-generated method stub
-		return true;
-	}
-	
-	@Override
-	public void close(MessageContext context) {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	

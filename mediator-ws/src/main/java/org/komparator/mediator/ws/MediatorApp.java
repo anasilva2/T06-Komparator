@@ -1,6 +1,9 @@
 package org.komparator.mediator.ws;
 
+import java.util.Timer;
+
 import org.komparator.security.handler.SignatureHandler;
+import org.komparator.security.handler.TimeStampHandler;
 
 public class MediatorApp {
 
@@ -14,6 +17,7 @@ public class MediatorApp {
 		String uddiURL = null;
 		String wsName = null;
 		String wsURL = null;
+		String wsI = null;
 
 		// Create server implementation object, according to options
 		MediatorEndpointManager endpoint = null;
@@ -22,18 +26,43 @@ public class MediatorApp {
 			endpoint = new MediatorEndpointManager(wsURL);
 		} else if (args.length >= 3) {
 			uddiURL = args[0];
+			
 			wsName = args[1];
 			SignatureHandler.idEmissor = wsName;
 			wsURL = args[2];
-			endpoint = new MediatorEndpointManager(uddiURL, wsName, wsURL);
+			wsI = args[3];
+			if(wsI.equals("1")){
+				System.out.println("------ Primary Mediator ------");
+				
+				endpoint = new MediatorEndpointManager(uddiURL, wsName, wsURL);
+			}else{
+				System.out.println("------ Secondary Mediator ------");
+				endpoint = new MediatorEndpointManager(uddiURL,wsName,wsURL,wsI);
+			}
+			
 			endpoint.setVerbose(true);
 		}
-
+		
+		LifeProof lifeproof = new LifeProof(wsI,uddiURL);
 		try {
 			endpoint.start();
-			endpoint.awaitConnections();
+			synchronized(lifeproof){
+				
+				if(!wsI.equals("1")){
+					System.out.println("Waiting for Primary Mediator to start...");
+					while(LastTimeAliveSingleton.getInstance().getLastTimeAlive() == null);
+				}
+				lifeproof.start();
+				endpoint.awaitConnections();
+			}
+			
+			
 		} finally {
+			
 			endpoint.stop();
+			lifeproof.stopThread();
+			
+			
 		}
 
 	}

@@ -32,7 +32,7 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 	// Handler interface implementation
 	//
 
-	public static final String CONTEXT_PROPERTY = "my.property";
+	public static final String CONTEXT_PROPERTY = "my.property";	
 	
 	/**
 	 * Gets the header blocks that can be processed by this Handler instance. If
@@ -49,16 +49,23 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 	 */
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
+		
+		QName operation = (QName) smc.get(MessageContext.WSDL_OPERATION);
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
-		if(outbound.booleanValue())
-			addTimeStamp(smc);
-		else
-			try {
-				checkTime(smc);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				throw new RuntimeException("Erro no checkTime do TimeStampHandler");
-			}
+		
+		if(!operation.getLocalPart().equals("imAlive")){
+			
+			if(outbound.booleanValue())
+				addTimeStamp(smc);
+			else
+				try {
+					checkTime(smc);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new RuntimeException("Erro no checkTime do TimeStampHandler");
+				}
+		}
+		
 			
 		return true;
 	}
@@ -90,10 +97,11 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 	 */
 	
 	private void addTimeStamp(SOAPMessageContext smc) {
+		System.out.println("ADD TIMESTAMP....");
 
 		try {
 			System.out.println("Writing header in outbound SOAP message...");
-
+			
 			// get SOAP envelope
 			SOAPMessage msg = smc.getMessage();
 			SOAPPart sp = msg.getSOAPPart();
@@ -129,8 +137,7 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 	
 	private boolean checkTime(SOAPMessageContext smc) throws ParseException, SOAPException {
 		
-
-			
+		System.out.println("CHECK TIMESTAMP....");	
 		// get SOAP envelope
 		SOAPMessage msg = smc.getMessage();
 		SOAPPart sp = msg.getSOAPPart();
@@ -156,11 +163,11 @@ public class TimeStampHandler implements SOAPHandler<SOAPMessageContext> {
 			
 		Date d1 = dateFormatter1.parse(dateFormatter);
 			
-			
 		Date actualDate = new Date();		
 			
 		int timeTaken = (int) (actualDate.getTime() - d1.getTime())/1000;
-			
+		
+
 		if(timeTaken > 3)
 			throw new RuntimeException("Time taken was greater than 3");
 				

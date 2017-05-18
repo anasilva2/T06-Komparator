@@ -22,9 +22,27 @@
         <uddi.url>http://localhost:9090</uddi.url>
         <ws.name>T06_Mediator</ws.name>
         <ws.url>http://localhost:8080/mediator-ws/endpoint</ws.url>
+
+        <group.id>T06</group.id>
+
+        <ws.i>1</ws.i>
+
+        <ws.host>localhost</ws.host>
+        <ws.port>807${ws.i}</ws.port>
+        <ws.url>http://${ws.host}:${ws.port}/mediator-ws/endpoint</ws.url>
+       
+        <ws.name>${group.id}_Mediator</ws.name>
+
+        <supplier.ws.name>${group.id}_Supplier</supplier.ws.name> 
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.komparator.T06</groupId>
+            <artifactId>mediator-ws-cli</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- HANDLERS -->
         <dependency>
@@ -108,6 +126,7 @@
                         <argument>${uddi.url}</argument>
                         <argument>${ws.name}</argument>
                         <argument>${ws.url}</argument>
+                        <argument>${ws.i}</argument>
                     </arguments>
                 </configuration>
             </plugin>

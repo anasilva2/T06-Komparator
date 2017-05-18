@@ -13,10 +13,19 @@ public class MediatorEndpointManager {
 	private String uddiURL = null;
 	/** Web Service name */
 	private String wsName = null;
+	
+	/** WSI*/
+	private String wsI = null;
+	
 
 	/** Get Web Service UDDI publication name */
 	public String getWsName() {
 		return wsName;
+	}
+	
+	/** Get WSI */
+	public String getWsI(){
+		return wsI;
 	}
 
 	/** Web Service location to publish */
@@ -56,6 +65,7 @@ public class MediatorEndpointManager {
 		this.uddiURL = uddiURL;
 		this.wsName = wsName;
 		this.wsURL = wsURL;
+		this.wsI = "1";
 	}
 
 	/** constructor with provided web service URL */
@@ -63,6 +73,16 @@ public class MediatorEndpointManager {
 		if (wsURL == null)
 			throw new NullPointerException("Web Service URL cannot be null!");
 		this.wsURL = wsURL;
+	}
+	
+	/** constructor with provided web service URL and WSI*/
+	public MediatorEndpointManager(String uddiURL,String wsName, String wsURL,String wsI) {
+		this.uddiURL = uddiURL;
+		this.wsName = wsName;
+		this.wsURL = wsURL;
+		if(wsI == null)
+			throw new NullPointerException("WSI cannot be null!");
+		this.wsI = wsI;
 	}
 
 	/* end point management */
@@ -83,6 +103,7 @@ public class MediatorEndpointManager {
 			}
 			throw e;
 		}
+		
 		publishToUDDI();
 	}
 
@@ -122,22 +143,29 @@ public class MediatorEndpointManager {
 	/* UDDI */
 
 	void publishToUDDI() throws Exception {
-		try {
-			// publish to UDDI
-			if (uddiURL != null) {
-				if (verbose) {
-					System.out.printf("Publishing '%s' to UDDI at %s%n", wsName, uddiURL);
+		
+		if(wsI.equals("1")){
+			try {
+				// publish to UDDI
+				if (uddiURL != null) {
+					if (verbose) {
+						System.out.printf("Publishing '%s' to UDDI at %s%n", wsName, uddiURL);
+					}
+					
+					uddiNaming = new UDDINaming(uddiURL);
+					uddiNaming.rebind(wsName, wsURL);
 				}
-				uddiNaming = new UDDINaming(uddiURL);
-				uddiNaming.rebind(wsName, wsURL);
+			} catch (Exception e) {
+				uddiNaming = null;
+				if (verbose) {
+					System.out.printf("Caught exception when binding to UDDI: %s%n", e);
+				}
+				throw e;
 			}
-		} catch (Exception e) {
-			uddiNaming = null;
-			if (verbose) {
-				System.out.printf("Caught exception when binding to UDDI: %s%n", e);
-			}
-			throw e;
+		}else{
+			uddiNaming = new UDDINaming(uddiURL);
 		}
+		
 	}
 
 	void unpublishFromUDDI() {

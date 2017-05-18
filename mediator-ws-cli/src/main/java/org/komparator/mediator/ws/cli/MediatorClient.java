@@ -111,11 +111,6 @@ public class MediatorClient implements MediatorPortType {
 
     // remote invocation methods ----------------------------------------------
     
-    
-    @Override
-	public void clear() {
-		port.clear();
-	}
 
     @Override
 	public String ping(String arg0) {
@@ -152,6 +147,30 @@ public class MediatorClient implements MediatorPortType {
 	@Override
 	public List<ShoppingResultView> shopHistory() {
 		return port.shopHistory();
+	}
+
+	@Override
+	public void clear() {
+		port.clear();
+		
+	}
+
+	@Override
+	public void imAlive() {
+		port.imAlive();
+		
+	}
+
+	@Override
+	public void updateShopHistory(ShoppingResultView shoppingList) {
+		port.updateShopHistory(shoppingList);
+		
+	}
+
+	@Override
+	public void updateCart(String id, CartView cart) {
+		port.updateCart(id, cart);
+		
 	}
  
 }
