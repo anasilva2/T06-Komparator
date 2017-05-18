@@ -161,16 +161,19 @@ public class MediatorClient implements MediatorPortType {
 		
 	}
 
-	@Override
-	public void updateShopHistory(ShoppingResultView shoppingList) {
-		port.updateShopHistory(shoppingList);
-		
-	}
 
 	@Override
 	public void updateCart(String id, CartView cart) {
 		port.updateCart(id, cart);
 		
 	}
+
+	@Override
+	public void updateShopHistory(ShoppingResultView shopping, Integer shoppingId) {
+		port.updateShopHistory(shopping, shoppingId);
+	}
+
+	
+
  
 }

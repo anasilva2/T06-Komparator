@@ -234,7 +234,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		shoppingId++;
 		
 		//Para update no secundário
-		updateShopHistory(shopping);
+		updateShopHistory(shopping,shoppingId);
 		return shopping;
 	}
 
@@ -308,15 +308,17 @@ public class MediatorPortImpl implements MediatorPortType{
 			if(!productFound)
 				cartList.get(cartId).getItems().add(cartItem);
 			
+			updateCart(cartId,cartList.get(cartId));
+			
 		}else{
 			
 			CartView cart = new CartView();
 			cart.setCartId(cartId);
 			cart.getItems().add(cartItem);
 			cartList.put(cartId, cart);
-			updateCart(cartId, cart);
-			
+			updateCart(cartId,cart);
 		}
+		
 			
 	}
 
@@ -399,10 +401,11 @@ public class MediatorPortImpl implements MediatorPortType{
 	}
 	
 	@Override
-	public void updateShopHistory(ShoppingResultView shoppingList) {
+	public void updateShopHistory(ShoppingResultView shopping, Integer shoppingId) {
 		String mediatorN = endpointManager.getWsI();
 		if(!mediatorN.equals("1")){
-			shoppingHistory.add(shoppingList);
+			shoppingHistory.add(shopping);
+			this.shoppingId = shoppingId;
 		}
 	}
 
@@ -410,7 +413,11 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void updateCart(String id, CartView cart) {
 		String mediatorN = endpointManager.getWsI();
 		if(!mediatorN.equals("1")){
-			cartList.put(id, cart);
+			if(!cartList.containsKey("id")){
+				cartList.put(id, cart);
+			}else{
+				cartList.replace(id, cart);
+			}
 		}
 	}
 	
@@ -482,6 +489,10 @@ public class MediatorPortImpl implements MediatorPortType{
 		faultInfo.message = message;
 		throw new EmptyCart_Exception(message, faultInfo);
 	}
+
+	
+
+	
 
 
 }
