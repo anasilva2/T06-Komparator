@@ -2,6 +2,7 @@ package org.komparator.mediator.ws.cli;
 
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +22,12 @@ import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
  */
 public class MediatorClient implements MediatorPortType {
 
+	private int connectionTimeout = 10; //segundos
+	
+	private int receiveTimeout = 70; //segundos
+	
      /** WS service */
-     MediatorService service = null;
+    MediatorService service = null;
 
      /** WS port (port type is the interface, port is the implementation) */
     MediatorPortType port = null;
@@ -105,6 +110,29 @@ public class MediatorClient implements MediatorPortType {
             Map<String, Object> requestContext = bindingProvider
                     .getRequestContext();
             requestContext.put(ENDPOINT_ADDRESS_PROPERTY, wsURL);
+            
+            // The connection timeout property has different names in different versions of JAX-WS
+            // Set them all to avoid compatibility issues
+            final List<String> CONN_TIME_PROPS = new ArrayList<String>();
+            CONN_TIME_PROPS.add("com.sun.xml.ws.connect.timeout");
+            CONN_TIME_PROPS.add("com.sun.xml.internal.ws.connect.timeout");
+            CONN_TIME_PROPS.add("javax.xml.ws.client.connectionTimeout");
+            
+            // Set timeout until a connection is established (unit is milliseconds; 0 means infinite)
+            for (String propName : CONN_TIME_PROPS)
+                requestContext.put(propName, connectionTimeout*1000);
+            System.out.printf("Set connection timeout to %d milliseconds%n", connectionTimeout*1000);
+            
+            // The receive timeout property has alternative names
+            // Again, set them all to avoid compatibility issues
+            final List<String> RECV_TIME_PROPS = new ArrayList<String>();
+            RECV_TIME_PROPS.add("com.sun.xml.ws.request.timeout");
+            RECV_TIME_PROPS.add("com.sun.xml.internal.ws.request.timeout");
+            RECV_TIME_PROPS.add("javax.xml.ws.client.receiveTimeout");
+            // Set timeout until the response is received (unit is milliseconds; 0 means infinite)
+            for (String propName : RECV_TIME_PROPS)
+                requestContext.put(propName, receiveTimeout*1000);
+            System.out.printf("Set receive timeout to %d milliseconds%n", receiveTimeout*1000);
         }
     }
 
@@ -160,7 +188,8 @@ public class MediatorClient implements MediatorPortType {
 		port.imAlive();
 		
 	}
-
+	
+	// todos metodos com primário. funcao que vai ao uddi procura wsMediator. pode ter o url antigo.
 
 	@Override
 	public void updateCart(String id, CartView cart) {
@@ -172,8 +201,5 @@ public class MediatorClient implements MediatorPortType {
 	public void updateShopHistory(ShoppingResultView shopping, Integer shoppingId) {
 		port.updateShopHistory(shopping, shoppingId);
 	}
-
-	
-
  
 }

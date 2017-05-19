@@ -3,8 +3,11 @@ package org.komparator.security.handler;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 import javax.xml.soap.Name;
@@ -23,6 +26,7 @@ import javax.xml.ws.handler.soap.SOAPMessageContext;
 public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 
 	public static final String CONTEXT_PROPERTY = "my.property";
+	public static String currentId;
 	
 	@Override
 	public Set<QName> getHeaders() {
@@ -88,7 +92,6 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 			if(Singleton.getInstance().getArray().contains(randomNumber))
 				throw new RuntimeException("This message has been received before");
 			
-			
 		} catch (SOAPException e) {
 			// TODO Auto-generated catch block
 			throw new RuntimeException("Erro no handler IdHandler");
@@ -98,6 +101,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 
 
 	private void addId(SOAPMessageContext smc) {
+	
 		
 		String random = secureRandomNumber();
 		if(random != null){
@@ -125,6 +129,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				element.addTextNode(random);
 				
 				Singleton.getInstance().addElementArray(random);
+				currentId = random;
 				
 			} catch (SOAPException e) {
 				// TODO Auto-generated catch block
@@ -157,6 +162,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 		
 		private static Singleton singleton;
 		private ArrayList<String> list = null;
+		private HashMap<String,Object> listRequests = new HashMap<String,Object>();
 		
 		private Singleton(){
 			list = new ArrayList<String>();
@@ -175,6 +181,14 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 		
 		public void addElementArray(String value){
 			list.add(value);
+		}
+		
+		public HashMap<String,Object> getListRequests(){
+			return this.listRequests;
+		}
+		
+		public void addRequest(String id, Object obj){
+			listRequests.put(id,obj);
 		}
 	}
 

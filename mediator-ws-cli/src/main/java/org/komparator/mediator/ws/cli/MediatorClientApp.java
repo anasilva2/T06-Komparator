@@ -1,5 +1,9 @@
 package org.komparator.mediator.ws.cli;
 
+import java.net.SocketTimeoutException;
+
+import javax.xml.ws.WebServiceException;
+
 import org.komparator.security.handler.SignatureHandler;
 
 public class MediatorClientApp {
@@ -37,10 +41,18 @@ public class MediatorClientApp {
 
         // the following remote invocations are just basic examples
         // the actual tests are made using JUnit
-
-        System.out.println("Invoke ping()...");
-        String result = client.ping("T06_Supplier");
-        System.out.println(result);
+        try{
+	        System.out.println("Invoke ping()...");
+	        String result = client.ping("T06_Supplier");
+	        System.out.println(result);
+	        
+        } catch(WebServiceException wse) {
+            System.out.println("Caught: " + wse);
+            Throwable cause = wse.getCause();
+            if (cause != null && cause instanceof SocketTimeoutException) {
+                System.out.println("The cause was a timeout exception: " + cause);
+            }
+        }
 
     }
 }

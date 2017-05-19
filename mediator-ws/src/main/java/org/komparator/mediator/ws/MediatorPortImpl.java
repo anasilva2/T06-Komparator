@@ -13,6 +13,9 @@ import javax.jws.HandlerChain;
 import javax.jws.Oneway;
 import javax.jws.WebService;
 
+import org.komparator.mediator.ws.cli.MediatorClient;
+import org.komparator.mediator.ws.cli.MediatorClientException;
+import org.komparator.security.handler.IdHandler;
 import org.komparator.security.handler.TimeStampHandler;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
@@ -54,7 +57,9 @@ public class MediatorPortImpl implements MediatorPortType{
 	private MediatorEndpointManager endpointManager;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
+		
 		this.endpointManager = endpointManager;
+		
 	}
 	
 	@Override
@@ -157,84 +162,107 @@ public class MediatorPortImpl implements MediatorPortType{
 	public ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
 		
+		System.out.println("REPEATED REQUEST AT BUYCART");
+		String mediatorN = endpointManager.getWsI();
 		ShoppingResultView shopping = new ShoppingResultView();
-		boolean creditCardValidation = false;
-		int totalPrice = 0;
 		
-		if(cartId == null)
-			throwInvalidCartId("Cart Identifier cannot be null!");
-		cartId = cartId.trim();
-		if(cartId.length() == 0)
-			throwInvalidCartId("Cart Identifier cannot be empty or whitespace!");
+		// só vai executar um pedido de cada vez
 		
-		if(creditCardNr == null)
-			throwInvalidCreditCard("Credit Card cannot be null!");
-		creditCardNr = creditCardNr.trim();
-		if(creditCardNr.length() == 0)
-			throwInvalidCreditCard("Credit Card cannot be empty or whitespace!");
-		
-		Collections.synchronizedMap(cartList);
-		
-		if(!cartList.containsKey(cartId))
-			throwInvalidCartId("Invalid Cart Identifier!");
-		
-		if(cartList.get(cartId).getItems().isEmpty())
-			throwEmptyCart("The cart selected is empty!");
-		
-		
-		
-		
-		try {
-			CreditCardClient c = new CreditCardClient(ccURL);
-			creditCardValidation = c.validateNumber(creditCardNr);
-		} catch (CreditCardClientException e) {
-			throwInvalidCreditCard("Invalid Credit Card");
-		}
-		
-		if(creditCardValidation){
-			CartView cart = cartList.get(cartId);
-			List<SupplierClient> supplierList = getSuppliers();
-			for(CartItemView i : cart.getItems()){
-				boolean supplierFound = false;
-				for(SupplierClient supplier : supplierList){
-					if(i.getItem().getItemId().getSupplierId().equals(supplier.getWsName())){
-						
-						String itemId = i.getItem().getItemId().getProductId();
-						int quantity = i.getQuantity();
-						
-						try {
-							supplier.buyProduct(itemId, quantity);
-							totalPrice += supplier.getProduct(itemId).getPrice() * quantity;
-							shopping.getPurchasedItems().add(i);
-							supplierFound = true;
-						} catch (BadProductId_Exception | BadQuantity_Exception | InsufficientQuantity_Exception e) {
-							supplierFound = true;
-							shopping.getDroppedItems().add(i);
+		// De cada vez que executa o pedido vai verificar 
+		// se já existe o mesmo pedido na lista através do id
+		// caso exista retorna a resposta guardada
+		// caso contrário executa normalmente e adiciona à lista a resposta...
+		if(IdHandler.Singleton.getInstance().getListRequests().containsKey(IdHandler.currentId)){
+			
+			shopping = (ShoppingResultView) IdHandler.Singleton.getInstance().getListRequests().get(IdHandler.currentId);
+			shoppingId = Integer.parseInt(shopping.getId());
+			shoppingId++;
+			
+		}else{
+			
+			boolean creditCardValidation = false;
+			int totalPrice = 0;
+			
+			if(cartId == null)
+				throwInvalidCartId("Cart Identifier cannot be null!");
+			cartId = cartId.trim();
+			if(cartId.length() == 0)
+				throwInvalidCartId("Cart Identifier cannot be empty or whitespace!");
+			
+			if(creditCardNr == null)
+				throwInvalidCreditCard("Credit Card cannot be null!");
+			creditCardNr = creditCardNr.trim();
+			if(creditCardNr.length() == 0)
+				throwInvalidCreditCard("Credit Card cannot be empty or whitespace!");
+			
+			Collections.synchronizedMap(cartList);
+			
+			if(!cartList.containsKey(cartId))
+				throwInvalidCartId("Invalid Cart Identifier!");
+			
+			if(cartList.get(cartId).getItems().isEmpty())
+				throwEmptyCart("The cart selected is empty!");
+			
+			try {
+				CreditCardClient c = new CreditCardClient(ccURL);
+				creditCardValidation = c.validateNumber(creditCardNr);
+			} catch (CreditCardClientException e) {
+				throwInvalidCreditCard("Invalid Credit Card");
+			}
+			
+			if(creditCardValidation){
+				CartView cart = cartList.get(cartId);
+				List<SupplierClient> supplierList = getSuppliers();
+				for(CartItemView i : cart.getItems()){
+					boolean supplierFound = false;
+					for(SupplierClient supplier : supplierList){
+						if(i.getItem().getItemId().getSupplierId().equals(supplier.getWsName())){
+							
+							String itemId = i.getItem().getItemId().getProductId();
+							int quantity = i.getQuantity();
+							
+							try {
+								supplier.buyProduct(itemId, quantity);
+								totalPrice += supplier.getProduct(itemId).getPrice() * quantity;
+								shopping.getPurchasedItems().add(i);
+								supplierFound = true;
+							} catch (BadProductId_Exception | BadQuantity_Exception | InsufficientQuantity_Exception e) {
+								supplierFound = true;
+								shopping.getDroppedItems().add(i);
+							}
 						}
 					}
+					if(!supplierFound)
+						shopping.getDroppedItems().add(i);
 				}
-				if(!supplierFound)
-					shopping.getDroppedItems().add(i);
+			}else{
+				throwInvalidCreditCard("Invalid Credit Card");
 			}
-		}else{
-			throwInvalidCreditCard("Invalid Credit Card");
+			
+			shopping.setId(shoppingId+"");
+			shopping.setTotalPrice(totalPrice);
+			
+			if(shopping.getDroppedItems().size() == 0)
+				shopping.setResult(Result.COMPLETE);
+			else if(shopping.getPurchasedItems().size() == 0)
+				shopping.setResult(Result.EMPTY);
+			else
+				shopping.setResult(Result.PARTIAL);	
+			
+			 
+			shoppingHistory.add(shopping);
+			shoppingId++;
+			
+			IdHandler.Singleton.getInstance().addRequest(IdHandler.currentId, shopping);
+		
+		}
+	
+		//Chama apenas o update no MediatorPrimary
+		if(mediatorN.equals("1")){
+			//cliente secundário
+			LifeProof.clientMediator.updateShopHistory(shopping,shoppingId);
 		}
 		
-		shopping.setId(shoppingId+"");
-		shopping.setTotalPrice(totalPrice);
-		
-		if(shopping.getDroppedItems().size() == 0)
-			shopping.setResult(Result.COMPLETE);
-		else if(shopping.getPurchasedItems().size() == 0)
-			shopping.setResult(Result.EMPTY);
-		else
-			shopping.setResult(Result.PARTIAL);	
-		
-		shoppingHistory.add(shopping);
-		shoppingId++;
-		
-		//Para update no secundário
-		updateShopHistory(shopping,shoppingId);
 		return shopping;
 	}
 
@@ -242,86 +270,113 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 			InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
-		int prodQty = 0;
+		String mediatorN = endpointManager.getWsI();
 		
-		if(cartId == null)
-			throwInvalidCartId("Cart Identifier cannot be null!");
-		cartId = cartId.trim();
-		if(cartId.length() == 0)
-			throwInvalidCartId("Cart Identifier cannot be empty or whitespace!");
-		
-		if(itemId == null)
-			throwInvalidItemId("Item Id cannot be null");
-		
-		if(itemId.getSupplierId() == null || itemId.getSupplierId().equals(""))
-			throwInvalidItemId("Item Id Supplier cannot be null");
-		
-		if(itemQty <= 0)
-			throwInvalidQuantity("Item Quantity must be a positive number!");
-		
-		/** Ask the supplier of the product if there is enough quantity */
-		List<SupplierClient> supplierList = getSuppliers();
-		
-		for(SupplierClient s : supplierList){
-			if(s.getWsName().equals(itemId.getSupplierId())){
-				
-				try {
-					if(s.getProduct(itemId.getProductId()) == null)
-						throwInvalidItemId("Item Does Not Exist");
-					prodQty = s.getProduct(itemId.getProductId()).getQuantity();
-					if(prodQty < itemQty)
-						throwNotEnoughItems("Not Enough Items from " + s.getWsName() + " !");
-				} catch (BadProductId_Exception e) {
-					throwInvalidItemId("Invalid Item Identifer");
-				}
+		if(IdHandler.Singleton.getInstance().getListRequests().containsKey(IdHandler.currentId)){
+			System.out.println("REPEATED REQUEST AT ADDTOCART");
+			CartView cart = (CartView) IdHandler.Singleton.getInstance().getListRequests().get(IdHandler.currentId);
+			
+			if(mediatorN.equals("1")){
+				//cliente secundário
+				LifeProof.clientMediator.updateCart(cart.getCartId(),cartList.get(cart.getCartId()));
 			}
-		}
-		
-		List<ItemView> itemList = getItems(itemId.getProductId());
-		CartItemView cartItem = null;
-		
-		for(ItemView i : itemList){
-			if(i.getItemId().getSupplierId().equals(itemId.getSupplierId())){
-				cartItem = newCartItemView(i,itemQty);
-			}
-		}
-		
-		
-		Collections.synchronizedMap(cartList);
-		if(cartList.containsKey(cartId)){
-			
-			boolean productFound = false;
-			List<CartItemView> cartL = cartList.get(cartId).getItems();
-			
-			for(CartItemView c : cartL){
-				String prodId = c.getItem().getItemId().getProductId();
-				String prodSupplier = c.getItem().getItemId().getSupplierId();
-				if(prodId.equals(itemId.getProductId()) && prodSupplier.equals(itemId.getSupplierId())){
-					int quantity = c.getQuantity() + itemQty;
-					if(quantity > prodQty)
-						throwNotEnoughItems("Excesso de Quantidade");
-					c.setQuantity(quantity);
-					productFound = true;
-				}
-			}
-			
-			if(!productFound)
-				cartList.get(cartId).getItems().add(cartItem);
-			
-			updateCart(cartId,cartList.get(cartId));
 			
 		}else{
 			
-			CartView cart = new CartView();
-			cart.setCartId(cartId);
-			cart.getItems().add(cartItem);
-			cartList.put(cartId, cart);
-			updateCart(cartId,cart);
-		}
 		
+			int prodQty = 0;
+			
+			if(cartId == null)
+				throwInvalidCartId("Cart Identifier cannot be null!");
+			cartId = cartId.trim();
+			if(cartId.length() == 0)
+				throwInvalidCartId("Cart Identifier cannot be empty or whitespace!");
+			
+			if(itemId == null)
+				throwInvalidItemId("Item Id cannot be null");
+			
+			if(itemId.getSupplierId() == null || itemId.getSupplierId().equals(""))
+				throwInvalidItemId("Item Id Supplier cannot be null");
+			
+			if(itemQty <= 0)
+				throwInvalidQuantity("Item Quantity must be a positive number!");
+			
+			/** Ask the supplier of the product if there is enough quantity */
+			List<SupplierClient> supplierList = getSuppliers();
+			
+			for(SupplierClient s : supplierList){
+				if(s.getWsName().equals(itemId.getSupplierId())){
+					
+					try {
+						if(s.getProduct(itemId.getProductId()) == null)
+							throwInvalidItemId("Item Does Not Exist");
+						prodQty = s.getProduct(itemId.getProductId()).getQuantity();
+						if(prodQty < itemQty)
+							throwNotEnoughItems("Not Enough Items from " + s.getWsName() + " !");
+					} catch (BadProductId_Exception e) {
+						throwInvalidItemId("Invalid Item Identifer");
+					}
+				}
+			}
+			
+			List<ItemView> itemList = getItems(itemId.getProductId());
+			CartItemView cartItem = null;
+			
+			for(ItemView i : itemList){
+				if(i.getItemId().getSupplierId().equals(itemId.getSupplierId())){
+					cartItem = newCartItemView(i,itemQty);
+				}
+			}
+			
+			
+			Collections.synchronizedMap(cartList);
+			if(cartList.containsKey(cartId)){
+				
+				boolean productFound = false;
+				List<CartItemView> cartL = cartList.get(cartId).getItems();
+				
+				for(CartItemView c : cartL){
+					String prodId = c.getItem().getItemId().getProductId();
+					String prodSupplier = c.getItem().getItemId().getSupplierId();
+					if(prodId.equals(itemId.getProductId()) && prodSupplier.equals(itemId.getSupplierId())){
+						int quantity = c.getQuantity() + itemQty;
+						if(quantity > prodQty)
+							throwNotEnoughItems("Excesso de Quantidade");
+						c.setQuantity(quantity);
+						productFound = true;
+					}
+				}
+				
+				if(!productFound)
+					cartList.get(cartId).getItems().add(cartItem);
+				
+				//Chama apenas o update no MediatorPrimary
+				if(mediatorN.equals("1")){
+					//cliente secundário
+					LifeProof.clientMediator.updateCart(cartId,cartList.get(cartId));
+				}
+				
+				IdHandler.Singleton.getInstance().addRequest(IdHandler.currentId, cartList.get(cartId));
+				
+			}else{
+				
+				CartView cart = new CartView();
+				cart.setCartId(cartId);
+				cart.getItems().add(cartItem);
+				cartList.put(cartId, cart);
+				
+				//Chama apenas o update no MediatorPrimary
+				if(mediatorN.equals("1")){
+					//cliente secundário
+					LifeProof.clientMediator.updateCart(cartId,cart);
+				}
+				
+				IdHandler.Singleton.getInstance().addRequest(IdHandler.currentId, cartList.get(cartId));
+				
+			}
+		}
 			
 	}
-
 
 	@Override
 	public String ping(String arg0) {
@@ -358,9 +413,34 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 	}
 	
+	@Override
+	public void updateShopHistory(ShoppingResultView shopping, Integer shoppingId) {
+		
+		// Adiciona a lista de shoppings do secundário e faz update da variavel shoppingID
+		System.out.println("Update in ShopHistory at Secondary Mediator");
+		this.shoppingHistory.add(shopping);
+		this.shoppingId = shoppingId;
+		System.out.println("ShoppingHistory size at Secondary Mediator = " + shoppingHistory.size());
+		
+	}
 
+	@Override
+	public void updateCart(String id, CartView cart) {
+		
+		//adiciona a lista de Carts do secundário
+		
+		System.out.println("Update in Cart at Secondary Mediator");
+		if(cartList.containsKey(id)){
+			this.cartList.replace(id, cart);
+		}else{
+			this.cartList.put(id, cart);
+		}
+		System.out.println("CartList size at Secondary Mediator = " + cartList.size());
+		
+	}
 	   
 	// Auxiliary operations --------------------------------------------------	
+
 
 	private Comparator<ItemView> comparator = new Comparator<ItemView>(){
 
@@ -400,26 +480,6 @@ public class MediatorPortImpl implements MediatorPortType{
 		return supplierList;
 	}
 	
-	@Override
-	public void updateShopHistory(ShoppingResultView shopping, Integer shoppingId) {
-		String mediatorN = endpointManager.getWsI();
-		if(!mediatorN.equals("1")){
-			shoppingHistory.add(shopping);
-			this.shoppingId = shoppingId;
-		}
-	}
-
-	@Override
-	public void updateCart(String id, CartView cart) {
-		String mediatorN = endpointManager.getWsI();
-		if(!mediatorN.equals("1")){
-			if(!cartList.containsKey("id")){
-				cartList.put(id, cart);
-			}else{
-				cartList.replace(id, cart);
-			}
-		}
-	}
 	
 	// View helpers -----------------------------------------------------
 	
@@ -489,10 +549,5 @@ public class MediatorPortImpl implements MediatorPortType{
 		faultInfo.message = message;
 		throw new EmptyCart_Exception(message, faultInfo);
 	}
-
 	
-
-	
-
-
 }

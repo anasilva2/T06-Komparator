@@ -15,9 +15,9 @@ import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINamingException;
 
 public class LifeProof extends Thread{
 
-	private String SECONDARYMEDIATORURL = "http://localhost:8072/mediator-ws/endpoint";
+	public static String SECONDARYMEDIATORURL = "http://localhost:8072/mediator-ws/endpoint";
 	private String UDDIURL = null;
-	private MediatorClient clientMediator;
+	public static MediatorClient clientMediator;
 	private int imAliveTime = 5; /*periodo do imAlive*/
 	private int secondaryTime = 7;
 	private int latency = 1;
